@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	// "log"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +16,7 @@ func main(){
 	router.GET("/hello", helloHandler)
 	router.GET("/books/:id/:title", booksHandler)
 	router.GET("/query", queryHandler)
+	router.GET("/pointer/:pointer", pointerFunction)
 
 	// POST
 	router.POST("/books", postBooksHandler)
@@ -23,6 +25,15 @@ func main(){
 	// untuk mengatur port bisa lakukan cara seperti di bawah ini
 	// router.Run(":8888") 
 	// ^ menggunakan port 8888
+}
+
+func pointerFunction(c *gin.Context){
+	pointer := c.Param("pointer")
+	poin := &pointer
+	
+	c.JSON(http.StatusOK, gin.H{
+		"pointer":poin,
+	})
 }
 
 func rootHandler(c *gin.Context){
@@ -62,9 +73,8 @@ func queryHandler(c *gin.Context){
 
 // post
 type BookInput struct{
-	Title string
-	Price int
-	SubTitle string `json:"sub_title"`
+	Title string `json:"title" binding:"required"`
+	Price int `json:"price" binding:"required,number"`
 }
 
 func postBooksHandler(c *gin.Context){
@@ -72,12 +82,13 @@ func postBooksHandler(c *gin.Context){
 	var bookInput BookInput
 	err := c.ShouldBindJSON(&bookInput)
 	if err != nil {
-		log.Fatal(err)
+		c.JSON(http.StatusBadRequest, err)
+		fmt.Println(err)
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"title":bookInput.Title,
 		"price":bookInput.Price,
-		"sub_title":bookInput.SubTitle,
 	})
 }
